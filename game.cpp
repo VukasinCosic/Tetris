@@ -16,6 +16,8 @@ int n_piece_count = 0;
 int score = 0;
 bool block_force_down = false;
 std::vector<int> full_lines;
+bool spawned_in_last_three[7];
+int last_spawn_counter[7] = {0, 0, 0, 0, 0, 0, 0};
 
 int Rotate(int px, int py, int r)
 {
@@ -71,6 +73,22 @@ bool DoesPieceFit(int nTetromino, int nRotation, int nPosX, int nPosY, unsigned 
 		}
 
 	return true;
+}
+
+void rng_protection(int current)
+{
+	for (int i = 0; i < 7; i++)
+	{
+		if (i == current)
+		{
+			last_spawn_counter[i] = 0;
+			spawned_in_last_three[i] = true;
+			continue;
+		}
+		last_spawn_counter[i]++;
+		if(last_spawn_counter[i] > 3)
+			spawned_in_last_three[i] = false;
+	}
 }
 
 
@@ -136,7 +154,11 @@ internal int simulate_game(Input* input, unsigned char* playing_field)
 				}
 
 			//New piece
-			n_current_piece = rand() % 7;
+			int rand_value = rand() % 7;
+			while(spawned_in_last_three[rand_value])
+				rand_value = rand() % 7;
+			rng_protection(rand_value);
+			n_current_piece = rand_value;
 			n_current_rotation = 0;
 			n_current_x = n_field_width / 2;
 			n_current_y = 0;
@@ -151,7 +173,7 @@ internal int simulate_game(Input* input, unsigned char* playing_field)
 		n_speed_counter = 0;
 		block_force_down = false;
 
-		if (n_piece_count % 25 == 0)
+		if (n_piece_count % 40 == 0)
 			if (n_speed >= 10) n_speed--;
 		
 	}
